@@ -14,6 +14,14 @@ const MEETUP_ID = 6;
 function getMeetupCoverLink(meetup) {
   return `${API_URL}/images/${meetup.imageId}`;
 }
+/**
+ * Возвращает ссылку на изображение agenda-иконки
+ * @param type - строка с описанием типа
+ * @return {string} - ссылка на изображение
+ */
+function getIcon(type) {
+  return `/assets/icons/icon-${agendaItemIcons[type]}.svg`;
+}
 
 /**
  * Словарь заголовков по умолчанию для всех типов элементов программы
@@ -73,7 +81,7 @@ export const app = new Vue({
         agenda: this.rawMeetup.agenda
           ? this.rawMeetup.agenda.map((item) => ({
               ...item,
-              icon: `/assets/icons/icon-${agendaItemIcons[item.type]}.svg`,
+              icon: getIcon(item.type),
               title: item.title ? item.title : `${agendaItemTitles[item.type]}`,
             }))
           : null,
@@ -92,14 +100,9 @@ export const app = new Vue({
   },
 
   methods: {
-    // Получение данных с API предпочтительнее оформить отдельным методом,
-    // а не писать прямо в mounted()
     async fetchMeetup(id) {
       const res = await fetch(`${API_URL}/meetups/${id}`);
       this.rawMeetup = await res.json();
-    },
-    getIcon(type) {
-      return `/assets/icons/icon-${agendaItemIcons.type}.svg`;
     },
   },
 });
