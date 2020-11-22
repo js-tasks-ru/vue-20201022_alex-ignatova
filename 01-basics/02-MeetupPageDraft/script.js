@@ -14,6 +14,14 @@ const MEETUP_ID = 6;
 function getMeetupCoverLink(meetup) {
   return `${API_URL}/images/${meetup.imageId}`;
 }
+/**
+ * Возвращает ссылку на изображение agenda-иконки
+ * @param type - строка с описанием типа
+ * @return {string} - ссылка на изображение
+ */
+function getIcon(type) {
+  return `/assets/icons/icon-${agendaItemIcons[type]}.svg`;
+}
 
 /**
  * Словарь заголовков по умолчанию для всех типов элементов программы
@@ -44,23 +52,59 @@ const agendaItemIcons = {
   other: 'cal-sm',
 };
 
+function getDateOnlyString(date) {
+  const YYYY = date.getFullYear();
+  const MM = (date.getMonth() + 1).toString().padStart(2, '0');
+  const DD = date.getDate().toString().padStart(2, '0');
+  return `${YYYY}-${MM}-${DD}`;
+}
+
 export const app = new Vue({
   el: '#app',
 
   data: {
-    //
+    rawMeetup: {},
   },
 
   mounted() {
-    // Требуется получить данные митапа с API
+    this.fetchMeetup(MEETUP_ID);
   },
 
   computed: {
-    //
+    meetup() {
+      if (!this.rawMeetup) return null;
+      return {
+        ...this.rawMeetup,
+        cover: this.rawMeetup.imageId
+          ? getMeetupCoverLink(this.rawMeetup)
+          : undefined,
+        agenda: this.rawMeetup.agenda
+          ? this.rawMeetup.agenda.map((item) => ({
+              ...item,
+              icon: getIcon(item.type),
+              title: item.title ? item.title : `${agendaItemTitles[item.type]}`,
+            }))
+          : null,
+        date: new Date(this.rawMeetup.date),
+        dateOnlyString: getDateOnlyString(new Date(this.rawMeetup.date)),
+        localDate: new Date(this.rawMeetup.date).toLocaleString(
+          navigator.language,
+          {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          },
+        ),
+      };
+    },
   },
 
   methods: {
-    // Получение данных с API предпочтительнее оформить отдельным методом,
-    // а не писать прямо в mounted()
+    async fetchMeetup(id) {
+      const res = await fetch(`${API_URL}/meetups/${id}`);
+      this.rawMeetup = await res.json();
+    },
   },
 });
+
+window.app = app;
